@@ -167,7 +167,7 @@ Intel(R) Core(TM) id-8300H CPU @ 2.30GHz 2.30GHz 8G 64位
 
 **首先我们比较单线程，多线程共享，多线程独享的情况(数据是处理n个数据的总时间)**
 
-![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/chart1.png)
+![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/data1.png)
 
 ![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/chart1.png)
 
@@ -209,7 +209,7 @@ Intel(R) Core(TM) id-8300H CPU @ 2.30GHz 2.30GHz 8G 64位
 
 ![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/data2.png)
 
-![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/data2.png)
+![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/chart2.png)
 
 可以观察到，在10-30左右的性能是最好的，实验环境是8核cpu，我们想要达到的目标是将cpu的所有核心利用起来，使得每个核心都在运行线程，取得最好的性能。当线程数为1000时效果很差，虽然所有核心都在运行，但是1000个线程造成了大量的上下文切换，使得性能极度下降。
 
