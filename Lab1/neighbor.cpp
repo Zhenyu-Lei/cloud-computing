@@ -3,7 +3,7 @@
 #include <strings.h>
 
 #include "sudoku.h"
-
+#include <cstring>
 #include <algorithm>
 
 int neighbors[N][NEIGHBOR];
