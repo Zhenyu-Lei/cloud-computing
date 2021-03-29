@@ -139,11 +139,11 @@ void *Run(void *args)//求解一个矩阵
 
 ### 2.3 实验结果
 
-![](.\picture\result1.png)
+![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/result1.png)
 
 可以输出结果和用时
 
-![](.\picture\result2.png)
+![](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab1/picture/result2.png)
 
 选用了四个测试文件test1,test10,test20,test1000，如果不输出结果(1000的结果太多了)，可以观察到每个测试文件的平均消耗时间
 
