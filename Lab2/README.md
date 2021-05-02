@@ -5,4 +5,4 @@
 
 在终端使用make编译
 
-./httpserver运行（可改变参数ip和port，port默认9999）
+./httpserver运行（可改变参数port，port默认80）

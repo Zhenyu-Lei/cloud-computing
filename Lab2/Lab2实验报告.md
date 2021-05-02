@@ -100,7 +100,7 @@
 
 - 设置不同的cpu核数，测试可以承受的http请求压力
 
-  ![](1.png)
+  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/1.png)
 
   通过虚拟机中的设置修改cpu的核数，修改结果可以通过less /proc/cpuinfo观察到修改后的cpu核数。通过wrk工具测试30s内服务器可以处理的请求数，测试五组数据取平均值
 
@@ -110,7 +110,7 @@
 
 - 设置压力测试的并发量，测试可以承受的http请求压力
 
-  ![](2.png)
+  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/2.png)
   
   为了验证上一个问题的猜想，控制cpu的核数为1，修改客户端的并发量
   
