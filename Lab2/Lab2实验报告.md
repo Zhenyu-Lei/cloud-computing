@@ -96,27 +96,123 @@
   address sizes   : 43 bits physical, 48 bits virtual
   power management:
 
+## 主要代码实现
+
+- 主线程，负责绑定socket读出需要处理请求，将未处理的请求放入请求池
+
+  ```c++
+  	//监听完毕，等待客户端访问
+  	printf("Waiting client...\n");
+  	while(1)
+  	{
+  		char cli_ip[INET_ADDRSTRLEN] = "";// 用于保存客户端IP地址
+  		struct sockaddr_in client_addr;// 用于保存客户端地址
+  		socklen_t cliaddr_len = sizeof(client_addr);// 必须初始化
+          
+  		//阻塞进程，等待连接建立
+  		connfd = accept(sockfd, (struct sockaddr*)&client_addr, &cliaddr_len);   							
+  		if(connfd < 0)
+  		{
+  			perror("accept this time");
+  			continue;
+  		}	
+  		// 打印客户端的 ip 和端口
+  		inet_ntop(AF_INET, &client_addr.sin_addr, cli_ip, INET_ADDRSTRLEN);//将数值格式转化为点分十进制的ip地址格式
+  		printf("----------------------------------------------\n");
+  		printf("client ip=%s,port=%d\n", cli_ip,ntohs(client_addr.sin_port));
+  		sem_wait(&empty);
+  		sem_wait(&semMutex);
+  		putTask(connfd);
+  		sem_post(&semMutex);
+  		sem_post(&full);
+  	}
+  	
+  	close(sockfd);
+  ```
+
+- 工作线程，从请求池中读出未处理请求，产生响应放入响应池
+
+  ```c++
+  void *client_process(void *arg)
+  {
+  	int recv_len = 0;
+  	char recv_buf[3000] = "";
+  	while(true){
+  		sem_wait(&full);
+  		sem_wait(&semMutex);
+  		int connfd=getTask();
+  		sem_post(&semMutex);
+  		sem_post(&empty);
+          
+  		{
+  			recv_len = recv(connfd, recv_buf, sizeof(recv_buf), 0);
+  			Dealer(recv_buf,connfd);
+  			pthread_mutex_lock(&myLock);
+  			total++;
+  			pthread_mutex_unlock(&myLock);
+  			printf("\ntotal=%d\n\n",total);
+  		}
+  	}
+  }
+  
+  ```
+
+- 输出线程，从响应池中取出响应写回客户端
+
+  ```c++
+  void *output_process(void *arg){
+  	char send_buf[1024];
+  	while(true){
+  		sem_wait(&fullOut);
+  		sem_wait(&semMutexOut);
+  		outPutTask TmpOpt=getTaskOut();
+  		sem_post(&semMutexOut);
+  		sem_post(&emptyOut);
+          
+  		sprintf(send_buf,"%s",TmpOpt.message.c_str());
+  		write(TmpOpt.sockfd,send_buf,strlen(send_buf));
+          
+  		if(TmpOpt.type==0){
+  			int fd=open(TmpOpt.file_path.c_str(),O_RDONLY);
+  			if(fd>=0){
+  				int tlen=TmpOpt.file_path.length();
+  				struct stat stat_buf;
+  				fstat(fd,&stat_buf);
+  				sendfile(TmpOpt.sockfd,fd,0,stat_buf.st_size);
+  			}
+  		}
+  		close(TmpOpt.sockfd);
+  	}
+  }
+  ```
+
 ## 性能测试
 
-- 设置不同的cpu核数，测试可以承受的http请求压力
+- **修改不同的线程数，1000个用户并发产生10000个请求(并发量远远大于服务器核数)**
 
   ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/1.png)
 
-  通过虚拟机中的设置修改cpu的核数，修改结果可以通过less /proc/cpuinfo观察到修改后的cpu核数。通过wrk工具测试30s内服务器可以处理的请求数，测试五组数据取平均值
+  可以看出，在不同的工作线程下， 吞吐量的大小没有什么区别，仅存在测试上的误差，其原因主要是性能瓶颈存在于输出线程上，因为输出线程只有一个，并且输出线程承担了io操作，输出线程必须一个一个去处理这些输出请求，即使工作线程已经处理完了这些工作
 
-  结果如上图折线图所示，当cpu核心数为1时，每秒的请求处理数最多，当核数增加后，每秒的请求数明显降低
+  所以读入-处理-输出三层结构的缺点是在工作线程增加时不能很好的提升性能，但是我们可以再做另一个实验，让每个工作线程处理完后自己返回，而不是交付给输出线程
 
-  理论上来说，CPU核数越多，处理请求越快，每秒处理的请求数也会越多，但是实际测试中，cpu核数为1时性能确实最好的。通过分析发现这和我们的测试方式有关，我们只开启了单个用户线程串行访问，使得线程池只有一个tcp连接，也就只有一个工作线程进行处理，同时有一个输出线程输出结果，这两个也是并行的，单核cpu效果最好，多核cpu因为有着上下文切换的原因效果较差
+- **修改项目结构，每个工作线程处理完后自己返回**
 
-- 设置压力测试的并发量，测试可以承受的http请求压力
+  ![cloud-computing/2.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/2.png)
 
-  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/2.png)
-  
-  为了验证上一个问题的猜想，控制cpu的核数为1，修改客户端的并发量
-  
-  同样是测试30s服务器处理请求的个数，分别测试客户端并发量1-5的情况，结果如上图所示
-  
-  当只有一个客户端时，服务器性能最好，随着客户端并行程度的提高，服务器性能有所下降
-  
-  因为当多用户并发时，每个用户建立一个tcp连接，有一个工作线程去处理这个tcp连接，对于单核cpu来说，多线程存在着上下文切换的开销，使得最终处理请求的个数变慢
+    可以看出，当每个线程运后自己返回结果，涉及到每个线程运行完后读取index.html发生io阻塞的问题，当线程数量增大时，吞吐量有所上升且略小于交给输出线程处理的情况，吞吐量上升的原因是是因为当线程增多时，遇到io情况下可以将cpu让给其他线程执行，所以随着线程数增加吞吐量有所上升；这个结构相比于读入-处理-输出三层的吞吐量略小，是因为进程对于socket的io近乎于满载，那么如果自己处理响应，则还要等待io写入，如果交给输出线程处理，不需要等待io写入直接可以处理下一个请求，这样提升了请求处理的效率，但是实际上并没有提高太多的性能，因为向socket的写入实际上是性能瓶颈，并且几乎已经到达了写入速度极限
+
+- 进行压力测试，选择性能表现较好的1000个线程
+
+  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/3.png)
+
+  选择20000并发量进行100000次请求，很遗憾在接近90000次时发生了超时，检查日志文件发现
+
+  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/4.png)
+
+  是因为打开的socket过多而造成了错误，所以是因为服务器自身的socket连接上限过小造成了发生超时错误
+
+  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/5.png)
+
+  在请求达到5w时截断，可以看到当并发量为20000的时候，可以达到7000+的吞吐率
 
