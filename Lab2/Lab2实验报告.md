@@ -198,13 +198,13 @@
 
 - **不同的计算机环境上运行服务器时，不同并发量**
 
-  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/data1.png)
+  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/data1.jpg)
 
 总体来说，CPU核数越多，数据处理的速度越快。随着并发数的增加，一开始服务器的处理能力提高，但当并发访问过多时，可能会超出服务器的处理能力而使每秒可以处理HTTP请求数下降，最终服务器每秒可以处理HTTP请求数量会保持平稳趋向于一个值并在其附近波动。并且并发超过一定限度的同时，会导致大量拥塞，从而导致访问超时。由于虚拟机的缘故，服务器每秒可以处理HTTP请求数也有较大差异。
 
 - **相同的计算机环境，不同的客户端数量**
 
-  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/data3.png)
+  ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/data3.jpg)
   
 保持虚拟机CPU核心数为1，同时开启1到3个客户端。如图，可知，当客户端数量为1时服务器处理HTTP请求的能力最好，从客户端数量为2开始急剧下降然后趋于平稳。这是因为客户端越多线程越多，增加的上下文切换越多，使得最终的处理速度下降。
 
