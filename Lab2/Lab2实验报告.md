@@ -191,6 +191,7 @@
 - **修改不同的线程数，1000个用户并发产生10000个请求(并发量远远大于服务器核数)**
 
   ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/new_1.png)
+  
   ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/new_2.png)
   可以看出，在不同的工作线程下， 吞吐量的大小没有什么区别，仅存在测试上的误差，其原因主要是性能瓶颈存在于输出线程上，因为输出线程只有一个，并且输出线程承担了io操作，输出线程必须一个一个去处理这些输出请求，即使工作线程已经处理完了这些工作
 
@@ -199,6 +200,7 @@
 - **修改项目结构，每个工作线程处理完后自己返回**
 
   ![cloud-computing/2.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/new_3.png)
+  
   ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/new_4.png)
 
     可以看出，当每个线程运后自己返回结果，涉及到每个线程运行完后读取index.html发生io阻塞的问题，当线程数量增大时，吞吐量有所上升且略小于交给输出线程处理的情况，吞吐量上升的原因是是因为当线程增多时，遇到io情况下可以将cpu让给其他线程执行，所以随着线程数增加吞吐量有所上升；这个结构相比于读入-处理-输出三层的吞吐量略小，是因为进程对于socket的io近乎于满载，那么如果自己处理响应，则还要等待io写入，如果交给输出线程处理，不需要等待io写入直接可以处理下一个请求，这样提升了请求处理的效率，但是实际上并没有提高太多的性能，因为向socket的写入实际上是性能瓶颈，并且几乎已经到达了写入速度极限
