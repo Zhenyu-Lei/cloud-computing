@@ -188,6 +188,10 @@
 
 ## 性能测试
 
+- **不同的计算机环境上运行服务器时，不同并发量**
+
+
+
 - **修改不同的线程数，1000个用户并发产生10000个请求(并发量远远大于服务器核数)**
 
   ![cloud-computing/1.png at master · setsuna-Lzy/cloud-computing (github.com)](https://github.com/setsuna-Lzy/cloud-computing/blob/master/Lab2/picture/new_1.png)
